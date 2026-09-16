@@ -47,13 +47,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         #if !DEBUG
-        // Only register once, so turning it off in System Settings › Login Items sticks.
+        // Register only on first launch, so removing it in System Settings › Login Items sticks.
+        // Checking SMAppService.mainApp.status doesn't work here: it reads .notFound, not
+        // .notRegistered, before the first registration.
         // Debug builds are skipped so a DerivedData copy never becomes the login item.
-        if SMAppService.mainApp.status == .notRegistered {
+        let key = "didRegisterLoginItem"
+        if !UserDefaults.standard.bool(forKey: key) {
             do {
                 try SMAppService.mainApp.register()
+                UserDefaults.standard.set(true, forKey: key)
             } catch {
-                Logger().error("Failed to register login item: \(error)")
+                Logger().error("Failed to register login item: \(error, privacy: .public)")
             }
         }
         #endif
